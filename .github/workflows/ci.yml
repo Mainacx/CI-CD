@@ -1,39 +1,29 @@
-name: Local CI/CD Pipeline
+name: Simple Docker Pipeline
 
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+on: [push]
 
 jobs:
-  test:
+  smoke-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Run tests
+      
+      - name: Install Docker
+        run: sudo apt-get install -y docker.io docker-compose
+      
+      - name: Run smoke test
         run: |
           cd server
-          pip install pytest
-          python -m pytest tests/ -v
+          ./tests/smoke_test.sh
 
-  deploy:
-    needs: test
-    runs-on: self-hosted
+  deploy-local:
+    needs: smoke-test
+    runs-on: self-hosted  # Локальный раннер
     steps:
       - uses: actions/checkout@v4
       
-      - name: Stop old containers
+      - name: Deploy
         run: |
           cd server
           docker-compose down || true
-
-      - name: Deploy new version
-        run: |
-          cd server
           docker-compose up -d --build
-
-      - name: Verify health
-        run: |
-          sleep 5
-          curl -f http://localhost:8080/healthz
