@@ -21,7 +21,7 @@ def health_check():
 @app.errorhandler(404)
 def not_found(error):
     app.logger.warning('404 error: %s', error)
-    return jsonify(error="Not Found"), 404
+    return jsonify(error="Not Found AAAAAAAAAAAAAAAAA"), 404
 
 if __name__ == "__main__":
     cert_file = 'certs/cert.pem'
