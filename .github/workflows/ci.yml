@@ -1,9 +1,39 @@
-name: CI Test
-on: [push, pull_request]
+name: Local CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Hello World
-        run: echo "GitHub Actions работает!"
+
+      - name: Run tests
+        run: |
+          cd server
+          pip install pytest
+          python -m pytest tests/ -v
+
+  deploy:
+    needs: test
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Stop old containers
+        run: |
+          cd server
+          docker-compose down || true
+
+      - name: Deploy new version
+        run: |
+          cd server
+          docker-compose up -d --build
+
+      - name: Verify health
+        run: |
+          sleep 5
+          curl -f http://localhost:8080/healthz
